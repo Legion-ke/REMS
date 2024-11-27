@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Report Maintenance Issue{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="bg-warning bg-opacity-10 p-4 rounded-3 mb-4 shadow-sm">
+        <h1 class="h3 mb-0">Report Maintenance Issue</h1>
+        <p class="mb-0 text-muted">{{ property.title }}</p>
+    </div>
+
+    <div class="row">
+        <!-- Property Details -->
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Property Details</h5>
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center text-muted mb-2">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            <span>{{ property.address }}</span>
+                        </div>
+                        <div class="d-flex align-items-center text-muted mb-2">
+                            <i class="fas fa-bed me-2"></i>
+                            <span>{{ property.bedrooms }} Bedrooms</span>
+                        </div>
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="fas fa-bath me-2"></i>
+                            <span>{{ property.bathrooms }} Bathrooms</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Maintenance Form -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Issue Details</h5>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="issue" class="form-label">Describe the Issue</label>
+                            <textarea class="form-control" id="issue" name="issue" rows="4" 
+                                    placeholder="Please provide as much detail as possible about the maintenance issue..."
+                                    required></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Priority Level</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="priority" 
+                                           id="priority-low" value="low">
+                                    <label class="form-check-label" for="priority-low">
+                                        <i class="fas fa-circle text-success me-1"></i>Low
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="priority" 
+                                           id="priority-medium" value="medium" checked>
+                                    <label class="form-check-label" for="priority-medium">
+                                        <i class="fas fa-circle text-warning me-1"></i>Medium
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="priority" 
+                                           id="priority-high" value="high">
+                                    <label class="form-check-label" for="priority-high">
+                                        <i class="fas fa-circle text-danger me-1"></i>High
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> High priority should only be used for urgent issues that affect 
+                            safety or essential living conditions (e.g., no water, gas leak, etc.).
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('property.report_maintenance') }}" 
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </a>
+                            <button type="submit" class="btn btn-warning flex-grow-1">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add required CSS -->
+<style>
+.form-check-input:checked[type="radio"] {
+    background-color: currentColor;
+    border-color: currentColor;
+}
+#priority-low:checked {
+    background-color: var(--bs-success);
+    border-color: var(--bs-success);
+}
+#priority-medium:checked {
+    background-color: var(--bs-warning);
+    border-color: var(--bs-warning);
+}
+#priority-high:checked {
+    background-color: var(--bs-danger);
+    border-color: var(--bs-danger);
+}
+</style>
+{% endblock %}

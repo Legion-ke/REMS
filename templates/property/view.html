@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <img src="{{ url_for('static', filename='img/property-placeholder.jpg') }}" class="img-fluid rounded" alt="{{ property.title }}">
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">{{ property.title }}</h2>
+                <p class="card-text">{{ property.description }}</p>
+                <hr>
+                <h4>Property Details</h4>
+                <ul class="list-unstyled">
+                    <li><strong>Price:</strong> 
+                        <div class="property-price mb-4">
+                            <h3 class="text-primary">KES {{ "{:,.2f}".format(property.price) }} /month</h3>
+                        </div>
+                    </li>
+                    <li><strong>Bedrooms:</strong> {{ property.bedrooms }}</li>
+                    <li><strong>Bathrooms:</strong> {{ property.bathrooms }}</li>
+                    <li><strong>Area:</strong> {{ property.area }} sq ft</li>
+                    <li><strong>Status:</strong> {{ property.status.title() }}</li>
+                    <li><strong>Address:</strong> {{ property.address }}</li>
+                </ul>
+                <hr>
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'client' and property.status == 'available' %}
+                        <div class="d-grid">
+                            <a href="{{ url_for('client.rent_property', property_id=property.id) }}" class="btn btn-success btn-lg">Rent Now</a>
+                        </div>
+                    {% elif current_user.id == property.owner_id or current_user.role == 'admin' %}
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('property.edit_property', id=property.id) }}" class="btn btn-primary">Edit Property</a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info">
+                        Please <a href="{{ url_for('auth.login') }}">login</a> to rent this property.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if property.status == 'rented' and current_user.is_authenticated %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4>Maintenance Requests</h4>
+                <a href="{{ url_for('property.report_maintenance', id=property.id) }}" class="btn btn-warning">Report Issue</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Maintenance Requests{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Maintenance Requests</h1>
+        <div class="btn-group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                Filter by Status
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="?status=all">All</a></li>
+                <li><a class="dropdown-item" href="?status=pending">Pending</a></li>
+                <li><a class="dropdown-item" href="?status=in_progress">In Progress</a></li>
+                <li><a class="dropdown-item" href="?status=completed">Completed</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Property</th>
+                            <th>Reported By</th>
+                            <th>Issue</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Reported Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in requests %}
+                        <tr>
+                            <td>#{{ request.id }}</td>
+                            <td>
+                                <a href="{{ url_for('property.view_property', id=request.property.id) }}">
+                                    {{ request.property.title }}
+                                </a>
+                            </td>
+                            <td>{{ request.reported_by_user.name }}</td>
+                            <td>{{ request.issue }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'danger' if request.priority == 'high' else 'warning' if request.priority == 'medium' else 'info' }}">
+                                    {{ request.priority }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if request.status == 'completed' else 'warning' if request.status == 'in_progress' else 'secondary' }}">
+                                    {{ request.status }}
+                                </span>
+                            </td>
+                            <td>{{ request.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                        Actions
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('agent.update_maintenance', request_id=request.id) }}">
+                                                <i class="fas fa-edit"></i> Update Status
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#notesModal{{ request.id }}">
+                                                <i class="fas fa-sticky-note"></i> View Notes
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="assignMaintenance({{ request.id }})">
+                                                <i class="fas fa-user-plus"></i> Assign Contractor
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Notes Modal -->
+                        <div class="modal fade" id="notesModal{{ request.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Maintenance Notes</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        {% if request.notes %}
+                                            <p>{{ request.notes }}</p>
+                                        {% else %}
+                                            <p class="text-muted">No notes available.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Contractor Modal -->
+<div class="modal fade" id="assignContractorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Contractor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="assignContractorForm">
+                    <input type="hidden" id="maintenanceRequestId" name="request_id">
+                    <div class="mb-3">
+                        <label for="contractor" class="form-label">Select Contractor</label>
+                        <select class="form-select" id="contractor" name="contractor_id" required>
+                            <option value="">Choose a contractor...</option>
+                            {% for contractor in contractors %}
+                            <option value="{{ contractor.id }}">{{ contractor.name }} - {{ contractor.specialization }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="scheduledDate" class="form-label">Schedule Date</label>
+                        <input type="date" class="form-control" id="scheduledDate" name="scheduled_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="estimatedCost" class="form-label">Estimated Cost</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="estimatedCost" name="estimated_cost" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitAssignment()">Assign</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+function assignMaintenance(requestId) {
+    document.getElementById('maintenanceRequestId').value = requestId;
+    var modal = new bootstrap.Modal(document.getElementById('assignContractorModal'));
+    modal.show();
+}
+
+function submitAssignment() {
+    var form = document.getElementById('assignContractorForm');
+    var formData = new FormData(form);
+    
+    fetch('/agent/assign-contractor', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while assigning the contractor.');
+    });
+}
+</script>
+{% endblock %}
+{% endblock %}

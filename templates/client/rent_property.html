@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Rent Property{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Rent Property: {{ property.title }}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Property Details</label>
+                            <ul class="list-unstyled">
+                                <li><strong>Address:</strong> {{ property.address }}</li>
+                                <li><strong>Monthly Rent:</strong> KES {{ "%.2f"|format(property.price) }}</li>
+                                <li><strong>Bedrooms:</strong> {{ property.bedrooms }}</li>
+                                <li><strong>Bathrooms:</strong> {{ property.bathrooms }}</li>
+                            </ul>
+                        </div>
+                        <div class="mb-3">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="text" class="form-control" id="start_date" name="start_date" required
+                                   placeholder="DD/MM/YYYY" pattern="\d{2}/\d{2}/\d{4}"
+                                   title="Please enter a date in the format DD/MM/YYYY">
+                        </div>
+                        <div class="mb-3">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="text" class="form-control" id="end_date" name="end_date" required
+                                   placeholder="DD/MM/YYYY" pattern="\d{2}/\d{2}/\d{4}"
+                                   title="Please enter a date in the format DD/MM/YYYY">
+                            <div class="form-text">Minimum rental period is 1 month</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Payment Details</label>
+                            <ul class="list-unstyled">
+                                <li><strong>Monthly Rent:</strong> KES {{ "%.2f"|format(property.price) }}</li>
+                                <li><strong>Security Deposit:</strong> KES {{ "%.2f"|format(property.price) }} (1 month rent)</li>
+                                <li><strong>Total Initial Payment:</strong> KES {{ "%.2f"|format(property.price * 2) }}</li>
+                            </ul>
+                        </div>
+                        <div class="mb-3">
+                            <label for="payment_method" class="form-label">Payment Method</label>
+                            <select class="form-select" id="payment_method" name="payment_method" required>
+                                <option value="">Select payment method</option>
+                                <option value="mpesa">M-PESA</option>
+                                <option value="bank">Bank Transfer</option>
+                                <option value="card">Credit/Debit Card</option>
+                            </select>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the rental terms and conditions
+                            </label>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Proceed to Payment</button>
+                            <a href="{{ url_for('property.view_property', id=property.id) }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Initialize datepicker with dd/mm/yyyy format
+        $('#start_date, #end_date').datepicker({
+            format: 'dd/mm/yyyy',
+            autoclose: true,
+            todayHighlight: true,
+            startDate: new Date()
+        });
+    });
+</script>
+{% endblock %}

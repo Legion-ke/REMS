@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Payment History{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h3>Payment History</h3>
+            <p class="mb-0">Property: {{ rental.property.title }}</p>
+        </div>
+        <div class="card-body">
+            {% if payments %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Late Fee</th>
+                            <th>Total</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th>Reference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.payment_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>KES {{ "%.2f"|format(payment.amount) }}</td>
+                            <td>
+                                {% if payment.late_fee %}
+                                <span class="text-danger">
+                                    KES {{ "%.2f"|format(payment.late_fee) }}
+                                </span>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                KES {{ "%.2f"|format(payment.amount + (payment.late_fee or 0)) }}
+                            </td>
+                            <td>{{ payment.payment_method }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if payment.status == 'completed' else 'warning' if payment.status == 'pending' else 'danger' }}">
+                                    {{ payment.status }}
+                                </span>
+                            </td>
+                            <td>{{ payment.reference or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-light">
+                            <td colspan="3"><strong>Total Paid:</strong></td>
+                            <td colspan="4">
+                                <strong>
+                                    KES {{ "%.2f"|format(payments|selectattr('status', 'equalto', 'completed')|sum(attribute='amount')) }}
+                                </strong>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No payment history available.</p>
+            {% endif %}
+            
+            <div class="mt-3">
+                <a href="{{ url_for('client.my_rentals') }}" class="btn btn-secondary">
+                    Back to My Rentals
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

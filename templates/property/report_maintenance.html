@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Report Maintenance Issue{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Report Maintenance Issue</h3>
+                    <p class="mb-0">Property: {{ property.title }}</p>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="issue" class="form-label">Describe the Issue</label>
+                            <textarea class="form-control" id="issue" name="issue" rows="4" required
+                                placeholder="Please provide detailed information about the maintenance issue..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">Priority Level</label>
+                            <select class="form-select" id="priority" name="priority" required>
+                                <option value="">Select priority level</option>
+                                <option value="low">Low - Minor issue, can wait</option>
+                                <option value="medium">Medium - Needs attention soon</option>
+                                <option value="high">High - Urgent issue</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="availability" class="form-label">Best Time for Inspection</label>
+                            <select class="form-select" id="availability" name="availability" required>
+                                <option value="">Select preferred time</option>
+                                <option value="morning">Morning (9 AM - 12 PM)</option>
+                                <option value="afternoon">Afternoon (12 PM - 4 PM)</option>
+                                <option value="evening">Evening (4 PM - 7 PM)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact" class="form-label">Contact Number</label>
+                            <input type="tel" class="form-control" id="contact" name="contact" 
+                                placeholder="Enter your phone number for maintenance coordination" required>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="permission" name="permission" required>
+                            <label class="form-check-label" for="permission">
+                                I give permission for maintenance staff to enter the property
+                            </label>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Submit Report</button>
+                            <a href="{{ url_for('property.view_property', id=property.id) }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

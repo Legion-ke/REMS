@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Payment History{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Payment History</h1>
+        <div class="d-flex gap-2">
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                    Filter by Status
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="?status=all">All</a></li>
+                    <li><a class="dropdown-item" href="?status=completed">Completed</a></li>
+                    <li><a class="dropdown-item" href="?status=pending">Pending</a></li>
+                    <li><a class="dropdown-item" href="?status=failed">Failed</a></li>
+                </ul>
+            </div>
+            <button class="btn btn-success" onclick="exportPayments()">
+                <i class="fas fa-file-export"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Payment Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title mb-3">Total Revenue</h6>
+                    <p class="card-text h3 mb-0 text-nowrap overflow-hidden">{{ total_revenue|currency }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title mb-3">This Month</h6>
+                    <p class="card-text h3 mb-0 text-nowrap overflow-hidden">{{ monthly_revenue|currency }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title mb-3">Pending</h6>
+                    <p class="card-text h3 mb-0 text-nowrap overflow-hidden">{{ pending_amount|currency }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title mb-3">Overdue</h6>
+                    <p class="card-text h3 mb-0 text-nowrap overflow-hidden">{{ overdue_amount|currency }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment History Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Property</th>
+                            <th>Tenant</th>
+                            <th>Amount</th>
+                            <th>Due Date</th>
+                            <th>Payment Date</th>
+                            <th>Status</th>
+                            <th>Method</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>#{{ payment.id }}</td>
+                            <td>
+                                <a href="{{ url_for('property.view_property', id=payment.rental.property.id) }}">
+                                    {{ payment.rental.property.title }}
+                                </a>
+                            </td>
+                            <td>{{ payment.rental.tenant.name }}</td>
+                            <td>{{ payment.amount|currency }}</td>
+                            <td>{{ payment.due_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ payment.payment_date.strftime('%Y-%m-%d %H:%M') if payment.payment_date else '-' }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if payment.status == 'completed' else 'warning' if payment.status == 'pending' else 'info' if payment.status == 'pending_verification' else 'danger' }}">
+                                    {{ payment.status.replace('_', ' ').title() }}
+                                </span>
+                            </td>
+                            <td>{{ payment.payment_method }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                        Actions
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('agent.view_payment', payment_id=payment.id) }}">
+                                                <i class="fas fa-eye"></i> View Details
+                                            </a>
+                                        </li>
+                                        {% if payment.status == 'pending' %}
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="sendReminder({{ payment.id }})">
+                                                <i class="fas fa-bell"></i> Send Reminder
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        {% if payment.status == 'pending' %}
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="markAsPaid({{ payment.id }})">
+                                                <i class="fas fa-check"></i> Mark as Paid
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        {% if payment.status == 'pending_verification' %}
+                                        <li>
+                                            <a class="dropdown-item text-success" href="#" onclick="verifyPayment({{ payment.id }})">
+                                                <i class="fas fa-check-double"></i> Verify Payment
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        {% if payment.status == 'completed' %}
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="downloadReceipt({{ payment.id }})">
+                                                <i class="fas fa-file-download"></i> Download Receipt
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+function exportPayments() {
+    window.location.href = "{{ url_for('agent.export_payments') }}";
+}
+
+function sendReminder(paymentId) {
+    if (confirm('Send payment reminder to tenant?')) {
+        fetch(`/agent/send-payment-reminder/${paymentId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Reminder sent successfully!');
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while sending the reminder.');
+        });
+    }
+}
+
+function markAsPaid(paymentId) {
+    if (confirm('Mark this payment as paid?')) {
+        fetch(`/agent/mark-payment-paid/${paymentId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the payment.');
+        });
+    }
+}
+
+function verifyPayment(paymentId) {
+    if (!confirm('Are you sure you want to verify this payment?')) {
+        return;
+    }
+    
+    // Get verification notes
+    const notes = prompt('Enter any verification notes (optional):');
+    
+    fetch(`/agent/verify-payment/${paymentId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notes: notes })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error verifying payment');
+    });
+}
+
+function downloadReceipt(paymentId) {
+    window.location.href = `/agent/download-receipt/${paymentId}`;
+}
+</script>
+{% endblock %}
+{% endblock %}

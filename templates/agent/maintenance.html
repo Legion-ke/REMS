@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Maintenance Requests{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Maintenance Requests</h1>
+    
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="property" class="form-label">Property</label>
+                    <select class="form-select" id="property" name="property">
+                        <option value="">All Properties</option>
+                        {% for prop in properties %}
+                        <option value="{{ prop.id }}" {% if request.args.get('property')|int == prop.id %}selected{% endif %}>
+                            {{ prop.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Status</option>
+                        <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="in_progress" {% if request.args.get('status') == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>Completed</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="priority" class="form-label">Priority</label>
+                    <select class="form-select" id="priority" name="priority">
+                        <option value="">All Priorities</option>
+                        <option value="low" {% if request.args.get('priority') == 'low' %}selected{% endif %}>Low</option>
+                        <option value="medium" {% if request.args.get('priority') == 'medium' %}selected{% endif %}>Medium</option>
+                        <option value="high" {% if request.args.get('priority') == 'high' %}selected{% endif %}>High</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Maintenance Requests Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Property</th>
+                            <th>Issue</th>
+                            <th>Reporter</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in maintenance_requests %}
+                        <tr>
+                            <td>{{ request.id }}</td>
+                            <td>{{ request.property.name }}</td>
+                            <td>{{ request.issue }}</td>
+                            <td>{{ request.reporter.full_name }}</td>
+                            <td>
+                                <span class="badge bg-{{ request.status_color }}">
+                                    {{ request.status|title }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ request.priority_color }}">
+                                    {{ request.priority|title }}
+                                </span>
+                            </td>
+                            <td>{{ request.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-primary" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#updateModal{{ request.id }}">
+                                        Update
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-info"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#assignModal{{ request.id }}">
+                                        Assign
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Update Modal -->
+                        <div class="modal fade" id="updateModal{{ request.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Update Maintenance Request</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form action="{{ url_for('agent.update_maintenance', request_id=request.id) }}" method="POST">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="status{{ request.id }}" class="form-label">Status</label>
+                                                <select class="form-select" id="status{{ request.id }}" name="status" required>
+                                                    <option value="pending" {% if request.status == 'pending' %}selected{% endif %}>Pending</option>
+                                                    <option value="in_progress" {% if request.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                                    <option value="completed" {% if request.status == 'completed' %}selected{% endif %}>Completed</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="notes{{ request.id }}" class="form-label">Notes</label>
+                                                <textarea class="form-control" id="notes{{ request.id }}" name="notes" rows="3">{{ request.notes }}</textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary">Update</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Assign Modal -->
+                        <div class="modal fade" id="assignModal{{ request.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Assign Contractor</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form action="{{ url_for('agent.assign_contractor') }}" method="POST">
+                                        <input type="hidden" name="maintenance_id" value="{{ request.id }}">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="contractor{{ request.id }}" class="form-label">Contractor</label>
+                                                <select class="form-select" id="contractor{{ request.id }}" name="contractor_id" required>
+                                                    <option value="">Select Contractor</option>
+                                                    {% for contractor in contractors %}
+                                                    <option value="{{ contractor.id }}">{{ contractor.full_name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="instructions{{ request.id }}" class="form-label">Instructions</label>
+                                                <textarea class="form-control" id="instructions{{ request.id }}" name="instructions" rows="3"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary">Assign</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

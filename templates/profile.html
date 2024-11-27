@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Profile Card -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <img src="{{ url_for('static', filename='img/profile-placeholder.png') }}" 
+                         alt="Profile Picture" class="rounded-circle img-fluid" style="width: 150px;">
+                    <h5 class="my-3">{{ current_user.name }}</h5>
+                    <p class="text-muted mb-1">{{ current_user.role|title }}</p>
+                    <p class="text-muted mb-4">{{ current_user.email }}</p>
+                    <div class="d-flex justify-content-center mb-2">
+                        <button type="button" class="btn btn-primary me-2">Edit Profile</button>
+                        <button type="button" class="btn btn-outline-primary">Change Password</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Details -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <p class="mb-0">Full Name</p>
+                        </div>
+                        <div class="col-sm-9">
+                            <p class="text-muted mb-0">{{ current_user.name }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <p class="mb-0">Email</p>
+                        </div>
+                        <div class="col-sm-9">
+                            <p class="text-muted mb-0">{{ current_user.email }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <p class="mb-0">Role</p>
+                        </div>
+                        <div class="col-sm-9">
+                            <p class="text-muted mb-0">{{ current_user.role|title }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <p class="mb-0">Member Since</p>
+                        </div>
+                        <div class="col-sm-9">
+                            <p class="text-muted mb-0">{{ current_user.created_at.strftime('%B %d, %Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Summary -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title mb-4">Properties</h6>
+                            {% if current_user.role in ['admin', 'agent'] %}
+                            <p class="mb-1">Listed Properties: <span class="float-end">{{ properties_count }}</span></p>
+                            <p class="mb-1">Available: <span class="float-end">{{ available_count }}</span></p>
+                            <p class="mb-0">Rented: <span class="float-end">{{ rented_count }}</span></p>
+                            {% else %}
+                            <p class="mb-1">Current Rentals: <span class="float-end">{{ rentals_count }}</span></p>
+                            <p class="mb-1">Active Maintenance: <span class="float-end">{{ maintenance_count }}</span></p>
+                            <p class="mb-0">Total Payments: <span class="float-end">${{ total_payments }}</span></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title mb-4">Recent Activity</h6>
+                            {% for activity in recent_activity %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <p class="mb-0">{{ activity.description }}</p>
+                                    <small class="text-muted">{{ activity.date.strftime('%B %d, %Y') }}</small>
+                                </div>
+                                <span class="badge bg-{{ activity.status_color }}">{{ activity.status }}</span>
+                            </div>
+                            {% else %}
+                            <p class="text-muted mb-0">No recent activity</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

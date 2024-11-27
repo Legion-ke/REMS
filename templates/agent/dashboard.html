@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Agent Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="display-5 mb-0">Welcome, {{ current_user.name }}</h1>
+                    <p class="lead mb-0">Here's your property management overview</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-white text-dark h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Listed Properties</h6>
+                            <h2 class="mb-0">{{ total_properties }}</h2>
+                            <div class="mt-2">
+                                <small class="text-success">{{ properties_available }} Available</small>
+                                <span class="mx-1">•</span>
+                                <small class="text-info">{{ properties_rented }} Rented</small>
+                            </div>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-home fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-white text-dark h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Active Rentals</h6>
+                            <h2 class="mb-0">{{ active_rentals }}</h2>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-key fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-white text-dark h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Pending Maintenance</h6>
+                            <h2 class="mb-0">{{ pending_maintenance }}</h2>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-tools fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-white text-dark h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Monthly Revenue</h6>
+                            <h2 class="mb-0">KES {{ "{:,.2f}".format(monthly_revenue) if monthly_revenue else '0.00' }}</h2>
+                        </div>
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-money-bill fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="{{ url_for('property.add_property') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add Property
+                        </a>
+                        <a href="{{ url_for('property.list_properties') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>View Properties
+                        </a>
+                        <a href="{{ url_for('agent.pending_rentals') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-clock me-2"></i>Pending Rentals
+                        </a>
+                        <a href="{{ url_for('agent.payment_history') }}" class="btn btn-outline-success">
+                            <i class="fas fa-money-bill me-2"></i>Payment History
+                        </a>
+                        <a href="{{ url_for('agent.maintenance') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-tools me-2"></i>Maintenance Requests
+                        </a>
+                        <a href="#" class="btn btn-outline-info" onclick="window.print()">
+                            <i class="fas fa-print me-2"></i>Print Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Properties Overview -->
+        <div class="col-xl-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Recent Properties</h5>
+                        <a href="{{ url_for('property.list_properties') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Address</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if recent_properties %}
+                                    {% for property in recent_properties %}
+                                    <tr>
+                                        <td>{{ property.title }}</td>
+                                        <td>{{ property.address }}</td>
+                                        <td>{{ property.price|currency }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if property.status == 'available' else 'warning' if property.status == 'maintenance' else 'info' }}">
+                                                {{ property.status.title() }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('property.view_property', id=property.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-3">No properties found.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Maintenance -->
+        <div class="col-xl-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Recent Maintenance</h5>
+                        <a href="{{ url_for('agent.maintenance') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_maintenance %}
+                        <div class="list-group list-group-flush">
+                        {% for request in recent_maintenance %}
+                            <div class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0">{{ request.property.title }}</h6>
+                                    <span class="badge bg-{{ request.status_color }}">{{ request.status.replace('_', ' ').title() }}</span>
+                                </div>
+                                <p class="text-muted small mb-2">{{ request.issue[:100] }}...</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        {{ request.created_at.strftime('%Y-%m-%d') }}
+                                    </small>
+                                    <a href="{{ url_for('agent.update_maintenance', request_id=request.id) }}" class="btn btn-sm btn-outline-primary">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No maintenance requests found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Activity -->
+        <div class="col-xl-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_activity %}
+                        <div class="timeline">
+                            {% for activity in recent_activity %}
+                            <div class="timeline-item">
+                                <div class="timeline-icon bg-{{ activity.color }} bg-opacity-10">
+                                    <i class="fas fa-{{ activity.icon }} text-{{ activity.color }}"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">{{ activity.title }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                                    </small>
+                                    {% if activity.status %}
+                                    <span class="badge bg-{{ 'success' if activity.status == 'available' or activity.status == 'completed' 
+                                                        else 'warning' if activity.status == 'pending' 
+                                                        else 'info' }} ms-2">
+                                        {{ activity.status.replace('_', ' ').title() }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-clock text-muted fa-3x mb-3"></i>
+                            <p class="text-muted mb-0">No recent activity on the agent profile</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this to the head section of base.html if not already present -->
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    .table th {
+        font-weight: 600;
+    }
+    .badge {
+        font-weight: 500;
+    }
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+    }
+    .bg-opacity-10 {
+        --bs-bg-opacity: 0.1;
+    }
+    .hover-shadow:hover {
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        transition: all .3s ease-in-out;
+    }
+
+    .timeline {
+        position: relative;
+        padding: 0;
+        list-style: none;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-left: 3rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .timeline-item:not(:last-child):before {
+        content: "";
+        position: absolute;
+        left: 1.25rem;
+        top: 2.5rem;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+
+    .timeline-icon {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .timeline-content {
+        padding: 0.5rem 0;
+    }
+</style>
+{% endblock %}
+{% endblock %}

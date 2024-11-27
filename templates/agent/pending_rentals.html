@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Pending Rental Requests</h2>
+    </div>
+
+    {% if pending_rentals %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Property</th>
+                    <th>Tenant</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Payment Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rental in pending_rentals %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('property.view_property', id=rental.property.id) }}" class="text-decoration-none">
+                            {{ rental.property.title }}
+                        </a>
+                    </td>
+                    <td>
+                        {{ rental.tenant.name }}
+                        <br>
+                        <small class="text-muted">{{ rental.tenant.email }}</small>
+                    </td>
+                    <td>{{ rental.start_date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ rental.end_date.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        {% set payment = rental.payments|selectattr('status', 'eq', 'pending')|first %}
+                        {% if payment %}
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-warning me-2">Pending Verification</span>
+                                <form action="{{ url_for('agent.verify_payment', payment_id=payment.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-check me-1"></i> Verify Payment
+                                    </button>
+                                </form>
+                            </div>
+                            {% if payment.payment_method %}
+                            <small class="text-muted d-block mt-1">
+                                <i class="fas fa-money-bill me-1"></i>{{ payment.payment_method|title }}
+                                {% if payment.reference %}
+                                <br><i class="fas fa-hashtag me-1"></i>Ref: {{ payment.reference }}
+                                {% endif %}
+                            </small>
+                            {% endif %}
+                        {% elif rental.payments|selectattr('status', 'eq', 'completed')|first %}
+                            <span class="badge bg-success">Payment Verified</span>
+                            <br>
+                            <small class="text-muted">{{ rental.payments|selectattr('status', 'eq', 'completed')|first.verification_date.strftime('%Y-%m-%d') }}</small>
+                        {% else %}
+                            <span class="badge bg-danger">No Payment Found</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <form action="{{ url_for('agent.approve_rental', rental_id=rental.id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-success btn-sm me-2" 
+                                        {% if not payment or payment.status != 'completed' %}disabled{% endif %}
+                                        title="{% if not payment or payment.status != 'completed' %}Cannot approve without verified payment{% endif %}">
+                                    <i class="fas fa-check me-1"></i> Approve
+                                </button>
+                            </form>
+                            <form action="{{ url_for('agent.reject_rental', rental_id=rental.id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm" 
+                                        onclick="return confirm('Are you sure you want to reject this rental request?')">
+                                    <i class="fas fa-times me-1"></i> Reject
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i> No pending rental requests at the moment.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

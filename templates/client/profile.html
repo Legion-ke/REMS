@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="bg-info bg-opacity-10 p-4 rounded-3 mb-4 shadow-sm">
+        <h1 class="h3 mb-0">My Profile</h1>
+        <p class="mb-0 text-muted">View and update your profile information</p>
+    </div>
+
+    <div class="row">
+        <!-- Statistics Cards -->
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted mb-4">Active Rentals</h6>
+                    <div class="d-flex align-items-center">
+                        <div class="display-4 me-3">{{ stats.active_rentals }}</div>
+                        <i class="fas fa-home text-info fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted mb-4">Total Payments</h6>
+                    <div class="d-flex align-items-center">
+                        <div class="display-4 me-3">{{ stats.total_payments }}</div>
+                        <i class="fas fa-credit-card text-success fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted mb-4">Maintenance Requests</h6>
+                    <div class="d-flex align-items-center">
+                        <div class="display-4 me-3">{{ stats.maintenance_requests }}</div>
+                        <i class="fas fa-tools text-warning fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Information -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Profile Information</h5>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ user.name }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ user.email }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   value="{{ user.phone }}" required>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password"
+                                   placeholder="Leave blank to keep current password">
+                            <div class="form-text text-muted">
+                                Only fill this if you want to change your password
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Links -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Quick Links</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('client.my_rentals') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>My Rentals
+                        </a>
+                        <a href="{{ url_for('property.list_properties') }}" class="btn btn-outline-info">
+                            <i class="fas fa-search me-2"></i>Browse Properties
+                        </a>
+                        <a href="{{ url_for('client.make_payment') }}" class="btn btn-outline-success">
+                            <i class="fas fa-credit-card me-2"></i>Make Payment
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

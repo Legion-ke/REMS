@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+        }
+        .content {
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .property-details {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Rental Application Update</h2>
+    </div>
+    
+    <div class="content">
+        <p>Dear {{ tenant.name }},</p>
+        
+        <p>We regret to inform you that your rental application for the following property has been rejected:</p>
+        
+        <div class="property-details">
+            <h3>{{ rental.property.title }}</h3>
+            <p><strong>Address:</strong> {{ rental.property.address }}</p>
+        </div>
+        
+        <p>If you have made any payments, they will be refunded to you within 3-5 business days.</p>
+        
+        <p>We encourage you to explore other available properties on our platform:</p>
+        
+        <a href="{{ url_for('property.list_properties', _external=True) }}" class="button">View Available Properties</a>
+        
+        <p>If you have any questions or need assistance, please don't hesitate to contact us.</p>
+        
+        <p>Thank you for your interest in our properties.</p>
+        
+        <p>Best regards,<br>The Property Management Team</p>
+    </div>
+</body>
+</html>

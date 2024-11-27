@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Select Payment{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="bg-primary text-white p-4 rounded-3 mb-4 shadow-sm">
+        <h1 class="h3 mb-0">Make a Payment</h1>
+        <p class="mb-0 opacity-75">Select a property to make a payment for</p>
+    </div>
+
+    <!-- Rentals List -->
+    <div class="row g-4">
+        {% if rentals %}
+            {% for rental_info in rentals %}
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm hover-shadow">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="card-title mb-1">{{ rental_info.property.title }}</h5>
+                                <p class="text-muted small mb-0">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    {{ rental_info.property.address }}
+                                </p>
+                            </div>
+                            <span class="badge bg-danger">{{ rental_info.days_overdue }} days overdue</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Monthly Rent:</span>
+                                <strong>KES {{ '{:,.2f}'.format(rental_info.amount) }}</strong>
+                            </div>
+                            
+                            {% if rental_info.days_overdue > 0 %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Late Fee (10%):</span>
+                                <strong class="text-danger">KES {{ '{:,.2f}'.format(rental_info.amount * 0.1) }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Total Due:</span>
+                                <strong class="text-danger">KES {{ '{:,.2f}'.format(rental_info.amount * 1.1) }}</strong>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid">
+                            <a href="{{ url_for('client.make_payment', rental_id=rental_info.rental.id) }}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-credit-card me-2"></i>Pay Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                    <h3>No Payments Due</h3>
+                    <p class="text-muted">You're all caught up! There are no pending payments at this time.</p>
+                    <a href="{{ url_for('client.dashboard') }}" class="btn btn-primary mt-3">
+                        Return to Dashboard
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add required CSS -->
+<style>
+.hover-shadow {
+    transition: box-shadow 0.3s ease-in-out;
+}
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

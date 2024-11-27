@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Client Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Section -->
+    <div class="bg-primary text-white p-4 rounded-3 mb-4 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-0">Welcome, {{ current_user.name }}</h1>
+                <p class="mb-0 opacity-75">Manage your rentals and maintenance requests</p>
+            </div>
+            <div>
+                <button class="btn btn-outline-light" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>Print Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm hover-shadow">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="fas fa-home text-primary fa-lg"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle text-muted mb-1">Active Rentals</h6>
+                            <h2 class="card-title mb-0">{{ active_rentals }}</h2>
+                        </div>
+                    </div>
+                    <a href="#rentals" class="stretched-link text-decoration-none">View Details</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm hover-shadow">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-info bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="fas fa-money-bill-wave text-info fa-lg"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle text-muted mb-1">Pending Payments</h6>
+                            <h2 class="card-title mb-0">KES {{ '{:,.2f}'.format(pending_payments if pending_payments else 0) }}</h2>
+                        </div>
+                    </div>
+                    <a href="#payments" class="stretched-link text-decoration-none">View Details</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm hover-shadow">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-warning bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="fas fa-tools text-warning fa-lg"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle text-muted mb-1">Maintenance Requests</h6>
+                            <h2 class="card-title mb-0">{{ maintenance_requests }}</h2>
+                        </div>
+                    </div>
+                    <a href="#maintenance" class="stretched-link text-decoration-none">View Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Quick Actions</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('property.report_maintenance') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-tools me-2"></i>Report Maintenance
+                        </a>
+                        <a href="{{ url_for('property.list_properties') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-search me-2"></i>Browse Properties
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Quick Actions</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('client.make_payment') }}" class="btn btn-outline-success">
+                            <i class="fas fa-credit-card me-2"></i>Make Payment
+                        </a>
+                        <a href="{{ url_for('client.view_profile') }}" class="btn btn-outline-info">
+                            <i class="fas fa-user me-2"></i>View Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Rentals -->
+    <div class="card border-0 shadow-sm mb-4" id="rentals">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-key me-2 text-primary"></i>Your Active Rentals
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if rentals %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Property</th>
+                                <th>Monthly Rent</th>
+                                <th>Start Date</th>
+                                <th>Next Payment</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rental in rentals %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-building me-2 text-muted"></i>
+                                        {{ rental.property.title }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>KES {{ "{:,.2f}".format(rental.property.price) if rental.property.price else '0.00' }}</strong>
+                                </td>
+                                <td>{{ rental.start_date.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {% if rental.next_payment_date %}
+                                        <span class="badge bg-light text-dark border">
+                                            {{ rental.next_payment_date.strftime('%Y-%m-%d') }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if rental.status == 'active' else 'warning' }} bg-opacity-75">
+                                        {{ rental.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('property.view_property', id=rental.property.id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('client.make_payment', rental_id=rental.id) }}" 
+                                           class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-dollar-sign"></i>
+                                        </a>
+                                        <a href="{{ url_for('property.report_maintenance', id=rental.property.id) }}" 
+                                           class="btn btn-sm btn-outline-warning">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-home text-muted fa-3x mb-3"></i>
+                    <p class="text-muted mb-0">You don't have any active rentals.</p>
+                    <a href="{{ url_for('property.list_properties') }}" class="btn btn-primary mt-3">
+                        Browse Available Properties
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Maintenance Requests -->
+    <div class="card border-0 shadow-sm mb-4" id="maintenance">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-tools me-2 text-warning"></i>Recent Maintenance Requests
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if maintenance_list %}
+                <div class="row g-4">
+                    {% for request in maintenance_list %}
+                    <div class="col-md-6">
+                        <div class="card h-100 border shadow-sm hover-shadow">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h6 class="card-title mb-0">{{ request.property.title }}</h6>
+                                    <span class="badge bg-{{ request.status_color }} bg-opacity-75">{{ request.status }}</span>
+                                </div>
+                                <p class="card-text text-muted mb-3">{{ request.issue[:100] }}...</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        {{ request.created_at.strftime('%Y-%m-%d') }}
+                                    </small>
+                                    <span class="badge bg-{{ request.priority_color }} bg-opacity-75">
+                                        {{ request.priority }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-clipboard-check text-muted fa-3x mb-3"></i>
+                    <p class="text-muted mb-0">No maintenance requests found.</p>
+                    <a href="{{ url_for('property.report_maintenance') }}" class="btn btn-warning mt-3">
+                        Report an Issue
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add required CSS -->
+<style>
+.hover-shadow {
+    transition: box-shadow 0.3s ease-in-out;
+}
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Available Properties</h2>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for property in properties %}
+    <div class="col">
+        <div class="card h-100">
+            <img src="{{ url_for('static', filename='img/property-placeholder.jpg') }}" class="card-img-top" alt="{{ property.title }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ property.title }}</h5>
+                <p class="card-text">{{ property.description[:150] }}...</p>
+                <ul class="list-unstyled">
+                    <li>
+                        <div class="property-price mb-3">
+                            <h4 class="text-primary">KES {{ "{:,.2f}".format(property.price) }} /month</h4>
+                        </div>
+                    </li>
+                    <li><strong>Bedrooms:</strong> {{ property.bedrooms }}</li>
+                    <li><strong>Bathrooms:</strong> {{ property.bathrooms }}</li>
+                    <li><strong>Area:</strong> {{ property.area }} sq ft</li>
+                </ul>
+            </div>
+            <div class="card-footer">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('property.view_property', id=property.id) }}" class="btn btn-primary">View Details</a>
+                    {% if current_user.is_authenticated and current_user.role == 'client' %}
+                    <a href="{{ url_for('client.rent_property', property_id=property.id) }}" class="btn btn-success">Rent Now</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">No properties available at the moment.</div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

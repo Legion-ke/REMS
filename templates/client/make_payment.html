@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Make Payment{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Make Payment</h3>
+                    <p class="mb-0">Property: {{ rental.property.title }}</p>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Payment Details</label>
+                            <ul class="list-unstyled">
+                                <li><strong>Due Date:</strong> {{ payment.due_date.strftime('%Y-%m-%d') }}</li>
+                                <li><strong>Amount Due:</strong> KES {{ "%.2f"|format(payment.amount) }}</li>
+                                {% if payment.is_overdue %}
+                                <li class="text-danger">
+                                    <strong>Late Fee:</strong> KES {{ "%.2f"|format(payment.late_fee) }}
+                                    ({{ payment.days_overdue }} days overdue)
+                                </li>
+                                <li><strong>Total Amount:</strong> KES {{ "%.2f"|format(payment.total_amount) }}</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        <div class="mb-3">
+                            <label for="payment_method" class="form-label">Payment Method</label>
+                            <select class="form-select" id="payment_method" name="payment_method" required>
+                                <option value="">Select payment method</option>
+                                <option value="mpesa">M-PESA</option>
+                                <option value="bank">Bank Transfer</option>
+                                <option value="card">Credit/Debit Card</option>
+                            </select>
+                        </div>
+                        
+                        <!-- M-PESA Fields -->
+                        <div id="mpesa-fields" style="display: none;">
+                            <div class="mb-3">
+                                <label for="phone_number" class="form-label">M-PESA Phone Number</label>
+                                <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                                    placeholder="Enter M-PESA registered number (e.g., 254712345678)">
+                                <div class="form-text">You will receive a prompt on your phone to complete the payment</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bank Transfer Fields -->
+                        <div id="bank-fields" style="display: none;">
+                            <div class="alert alert-info">
+                                <h5>Bank Account Details</h5>
+                                <p class="mb-0">
+                                    Bank: Example Bank<br>
+                                    Account Name: Property Management Ltd<br>
+                                    Account Number: 1234567890<br>
+                                    Branch Code: 001
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <label for="reference" class="form-label">Transaction Reference</label>
+                                <input type="text" class="form-control" id="reference" name="reference" 
+                                    placeholder="Enter bank transaction reference number">
+                            </div>
+                        </div>
+                        
+                        <!-- Card Payment Fields -->
+                        <div id="card-fields" style="display: none;">
+                            <div class="mb-3">
+                                <label for="card_number" class="form-label">Card Number</label>
+                                <input type="text" class="form-control" id="card_number" name="card_number" 
+                                    placeholder="1234 5678 9012 3456">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="expiry" class="form-label">Expiry Date</label>
+                                    <input type="text" class="form-control" id="expiry" name="expiry" 
+                                        placeholder="MM/YY">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="cvv" class="form-label">CVV</label>
+                                    <input type="text" class="form-control" id="cvv" name="cvv" 
+                                        placeholder="123">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Make Payment</button>
+                            <a href="{{ url_for('client.my_rentals') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethod = document.getElementById('payment_method');
+    const mpesaFields = document.getElementById('mpesa-fields');
+    const bankFields = document.getElementById('bank-fields');
+    const cardFields = document.getElementById('card-fields');
+    
+    paymentMethod.addEventListener('change', function() {
+        // Hide all fields first
+        mpesaFields.style.display = 'none';
+        bankFields.style.display = 'none';
+        cardFields.style.display = 'none';
+        
+        // Show fields based on selected payment method
+        switch(this.value) {
+            case 'mpesa':
+                mpesaFields.style.display = 'block';
+                break;
+            case 'bank':
+                bankFields.style.display = 'block';
+                break;
+            case 'card':
+                cardFields.style.display = 'block';
+                break;
+        }
+    });
+});
+</script>
+{% endblock %}

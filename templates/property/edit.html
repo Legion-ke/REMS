@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Property{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Edit Property</h1>
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('property.edit_property', id=property.id) }}">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Property Name</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ property.title }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="address" class="form-label">Address</label>
+                    <input type="text" class="form-control" id="address" name="address" value="{{ property.address }}" required>
+                    <div class="form-text">Enter the full property address</div>
+                </div>
+                <div class="mb-3">
+                    <label for="bedrooms" class="form-label">Bedrooms</label>
+                    <input type="number" class="form-control" id="bedrooms" name="bedrooms" min="0" value="{{ property.bedrooms }}" required>
+                    <div class="form-text">Enter a whole number (e.g., 2 for a 2-bedroom property)</div>
+                </div>
+                <div class="mb-3">
+                    <label for="bathrooms" class="form-label">Bathrooms</label>
+                    <input type="number" class="form-control" id="bathrooms" name="bathrooms" min="0" step="0.5" value="{{ property.bathrooms }}" required>
+                    <div class="form-text">Enter a number with up to one decimal place (e.g., 1.5 for one and a half bathrooms)</div>
+                </div>
+                <div class="mb-3">
+                    <label for="rent_amount" class="form-label">Monthly Rent Amount (KES)</label>
+                    <input type="number" class="form-control" id="rent_amount" name="rent_amount" min="0" step="0.01" value="{{ property.price }}" required>
+                    <div class="form-text">Enter amount in KES without commas (e.g., 25000 for KES 25,000)</div>
+                </div>
+                <div class="mb-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status" required>
+                        <option value="available" {% if property.status == 'available' %}selected{% endif %}>Available</option>
+                        <option value="rented" {% if property.status == 'rented' %}selected{% endif %}>Rented</option>
+                        <option value="maintenance" {% if property.status == 'maintenance' %}selected{% endif %}>Under Maintenance</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="3">{{ property.description }}</textarea>
+                    <div class="form-text">Enter a detailed description of the property</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{{ url_for('property.view_property', id=property.id) }}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Maintenance Request Details</h5>
+                        <a href="{{ url_for('agent.maintenance') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-arrow-left me-1"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <!-- Property Info -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">Property Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Property:</strong> {{ maintenance.property.title }}</p>
+                                    <p class="mb-1"><strong>Address:</strong> {{ maintenance.property.address }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Reported:</strong> {{ maintenance.created_at.strftime('%Y-%m-%d') }}</p>
+                                    <p class="mb-1"><strong>Priority:</strong> 
+                                        <span class="badge bg-{{ 'danger' if maintenance.priority == 'high' else 'warning' if maintenance.priority == 'medium' else 'info' }}">
+                                            {{ maintenance.priority.title() }}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Issue Details -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">Issue Details</h6>
+                            <p>{{ maintenance.issue }}</p>
+                        </div>
+
+                        <!-- Status Update -->
+                        <div class="mb-4">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="pending" {% if maintenance.status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="in_progress" {% if maintenance.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="completed" {% if maintenance.status == 'completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-4">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="4">{{ maintenance.notes or '' }}</textarea>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                Update Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}My Rentals{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">My Rentals</h2>
+    
+    <!-- Active Rentals -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="h5 mb-0">Active Rentals</h3>
+        </div>
+        <div class="card-body">
+            {% if active_rentals %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Rent Amount</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Next Payment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rental in active_rentals %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('property.view_property', id=rental.property.id) }}">
+                                    {{ rental.property.title }}
+                                </a>
+                            </td>
+                            <td>KES {{ "%.2f"|format(rental.rent_amount) }}/month</td>
+                            <td>{{ rental.start_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ rental.end_date.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                {% if rental.next_payment %}
+                                <span class="text-{{ 'danger' if rental.next_payment.is_overdue else 'success' }}">
+                                    {{ rental.next_payment.due_date.strftime('%Y-%m-%d') }}
+                                </span>
+                                {% else %}
+                                No pending payments
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                        Actions
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        {% if rental.next_payment %}
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('client.make_payment', rental_id=rental.id) }}">
+                                                Make Payment
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('property.report_maintenance', id=rental.property.id) }}">
+                                                Report Issue
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('client.view_payments', rental_id=rental.id) }}">
+                                                Payment History
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">You have no active rentals.</p>
+            <a href="{{ url_for('property.list_properties') }}" class="btn btn-primary">Browse Properties</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Past Rentals -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="h5 mb-0">Rental History</h3>
+        </div>
+        <div class="card-body">
+            {% if past_rentals %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Rent Amount</th>
+                            <th>Period</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rental in past_rentals %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('property.view_property', id=rental.property.id) }}">
+                                    {{ rental.property.title }}
+                                </a>
+                            </td>
+                            <td>KES {{ "%.2f"|format(rental.rent_amount) }}/month</td>
+                            <td>
+                                {{ rental.start_date.strftime('%Y-%m-%d') }} to
+                                {{ rental.end_date.strftime('%Y-%m-%d') }}
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if rental.status == 'completed' else 'warning' }}">
+                                    {{ rental.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('client.view_payments', rental_id=rental.id) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    View Payments
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No rental history available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

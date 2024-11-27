@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Details{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Payment Details</h1>
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="downloadReceipt({{ payment.id }})">
+                <i class="fas fa-file-download"></i> Download Receipt
+            </button>
+            {% if payment.status == 'pending' %}
+            <button class="btn btn-success" onclick="markAsPaid({{ payment.id }})">
+                <i class="fas fa-check"></i> Mark as Paid
+            </button>
+            <button class="btn btn-warning" onclick="sendReminder({{ payment.id }})">
+                <i class="fas fa-bell"></i> Send Reminder
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Payment Information -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Payment Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Payment ID:</th>
+                            <td>#{{ payment.id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Amount:</th>
+                            <td>${{ "{:,.2f}".format(payment.amount) }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                <span class="badge bg-{{ 'success' if payment.status == 'completed' else 'warning' if payment.status == 'pending' else 'danger' }}">
+                                    {{ payment.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Due Date:</th>
+                            <td>{{ payment.due_date.strftime('%Y-%m-%d') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Payment Date:</th>
+                            <td>{{ payment.payment_date.strftime('%Y-%m-%d %H:%M') if payment.payment_date else '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Payment Method:</th>
+                            <td>{{ payment.payment_method }}</td>
+                        </tr>
+                        {% if payment.last_reminder_sent %}
+                        <tr>
+                            <th>Last Reminder:</th>
+                            <td>{{ payment.last_reminder_sent.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Property and Tenant Information -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Property Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Property:</th>
+                            <td>
+                                <a href="{{ url_for('property.view_property', id=payment.rental.property.id) }}">
+                                    {{ payment.rental.property.title }}
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Address:</th>
+                            <td>{{ payment.rental.property.address }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tenant:</th>
+                            <td>{{ payment.rental.tenant.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tenant Email:</th>
+                            <td>{{ payment.rental.tenant.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tenant Phone:</th>
+                            <td>{{ payment.rental.tenant.phone }}</td>
+                        </tr>
+                        <tr>
+                            <th>Lease Period:</th>
+                            <td>
+                                {{ payment.rental.start_date.strftime('%Y-%m-%d') }} to 
+                                {{ payment.rental.end_date.strftime('%Y-%m-%d') }}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            {% if payment.notes %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Notes</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ payment.notes }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+function downloadReceipt(paymentId) {
+    window.location.href = `/agent/download-receipt/${paymentId}`;
+}
+
+function markAsPaid(paymentId) {
+    if (confirm('Mark this payment as paid?')) {
+        fetch(`/agent/mark-payment-paid/${paymentId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the payment.');
+        });
+    }
+}
+
+function sendReminder(paymentId) {
+    if (confirm('Send payment reminder to tenant?')) {
+        fetch(`/agent/send-payment-reminder/${paymentId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Reminder sent successfully!');
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while sending the reminder.');
+        });
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}
