@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
 develop-eggs/
 dist/
 downloads/
@@ -45,5 +44,14 @@ instance/
 # Logs
 *.log
 
-# Build output
-build/
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Database backups
+*.sql
+*.dump
+
+# Uploaded files
+uploads/*
+!uploads/.gitkeep
