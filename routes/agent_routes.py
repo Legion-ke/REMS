@@ -1128,7 +1128,7 @@ def reject_rental(rental_id):
 @agent.route('/payment/<int:payment_id>/verify', methods=['POST'])
 @login_required
 @agent_required
-def verify_payment(payment_id):
+def verify_rental_payment(payment_id):
     payment = Payment.query.get_or_404(payment_id)
     
     # Verify this payment is for a property managed by this agent
