@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 import os
 from dotenv import load_dotenv
 from extensions import db, login_manager, migrate, mail
@@ -58,6 +58,16 @@ def create_app():
     # Create database tables
     with app.app_context():
         db.create_all()
+
+    # Health check endpoint
+    @app.route('/health')
+    def health_check():
+        try:
+            # Test database connection
+            db.session.execute('SELECT 1')
+            return jsonify({'status': 'healthy', 'database': 'connected'}), 200
+        except Exception as e:
+            return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
 
     return app
 
