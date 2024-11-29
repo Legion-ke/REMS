@@ -27,5 +27,5 @@ ENV PYTHONUNBUFFERED=1
 # Expose port
 EXPOSE 5000
 
-# Run migrations and start the application with gunicorn
-CMD ["sh", "-c", "flask db upgrade && gunicorn --bind 0.0.0.0:5000 --workers 4 --threads 8 --timeout 120 app:app"]
+# Run the application with gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--threads", "8", "--timeout", "120", "app:app"]
