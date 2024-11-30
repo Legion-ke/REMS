@@ -7,7 +7,7 @@
     <h1 class="mb-4">Add New Property</h1>
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('property.add_property') }}">
+            <form method="POST" action="{{ url_for('property.add_property') }}" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label for="name" class="form-label">Property Name</label>
                     <input type="text" class="form-control" id="name" name="name" required>
@@ -37,6 +37,11 @@
                     <label for="description" class="form-label">Description</label>
                     <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                     <div class="form-text">Enter a detailed description of the property</div>
+                </div>
+                <div class="mb-3">
+                    <label for="images" class="form-label">Property Images</label>
+                    <input type="file" class="form-control" id="images" name="images" multiple accept="image/*">
+                    <div class="form-text">Select one or more images of the property (supported formats: PNG, JPG, JPEG, GIF)</div>
                 </div>
                 <button type="submit" class="btn btn-primary">Add Property</button>
                 <a href="{{ url_for('property.list_properties') }}" class="btn btn-secondary">Cancel</a>

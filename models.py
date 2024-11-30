@@ -31,6 +31,7 @@ class Property(db.Model):
     # Relationships
     rentals = db.relationship('Rental', backref='property', lazy=True)
     maintenance_requests = db.relationship('Maintenance', backref='property', lazy=True)
+    images = db.relationship('PropertyImage', backref='property', lazy=True)
 
 class Rental(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -65,6 +66,13 @@ class Payment(db.Model):
     
     # Add relationship to verifier
     verifier = db.relationship('User', backref='verified_payments', foreign_keys=[verified_by])
+
+class PropertyImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    property_id = db.Column(db.Integer, db.ForeignKey('property.id', name='fk_property_image'))
+    image_path = db.Column(db.String(255), nullable=False)
+    is_primary = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Maintenance(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -7,6 +7,9 @@ RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
     python3-dev \
+    libjpeg-dev \
+    zlib1g-dev \
+    libfreetype6-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first to leverage Docker cache

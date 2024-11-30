@@ -5,7 +5,7 @@ from datetime import datetime
 def generate_transaction_reference(prefix='TXN'):
     """Generate a unique transaction reference.
     Format: PREFIX-YYYYMMDD-XXXXX where X is alphanumeric
-    Example: TXN-20231205-A7B2C
+    Example: TXN-20241205-A7B2C
     """
     # Get current date
     date_str = datetime.now().strftime('%Y%m%d')

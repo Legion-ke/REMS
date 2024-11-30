@@ -1049,10 +1049,10 @@ def approve_rental(rental_id):
     if rental.property.agent_id != current_user.id:
         abort(403)
     
-    # Check if payment is made
+    # Check if payment is made and completed
     payment = Payment.query.filter_by(
         rental_id=rental.id,
-        status='paid'
+        status='completed'
     ).first()
     
     if not payment:
@@ -1066,24 +1066,39 @@ def approve_rental(rental_id):
         # Update property status
         rental.property.status = 'rented'
         
-        # Send confirmation email to tenant
-        msg = Message(
-            'Rental Approved',
-            recipients=[rental.tenant.email],
-            html=render_template(
-                'emails/rental_approved.html',
-                rental=rental,
-                tenant=rental.tenant
-            )
-        )
-        mail.send(msg)
-        
+        # Commit the changes
         db.session.commit()
-        flash('Rental has been approved', 'success')
+        flash('Rental has been approved successfully', 'success')
         
     except Exception as e:
         db.session.rollback()
-        flash('Error approving rental. Please try again.', 'error')
+        flash(f'Error approving rental: {str(e)}', 'error')
+    
+    return redirect(url_for('agent.pending_rentals'))
+
+@agent.route('/payment/<int:payment_id>/verify', methods=['POST'])
+@login_required
+@agent_required
+def verify_rental_payment(payment_id):
+    payment = Payment.query.get_or_404(payment_id)
+    
+    # Verify this payment is for a property managed by this agent
+    if payment.rental.property.agent_id != current_user.id:
+        abort(403)
+    
+    try:
+        # Update payment status
+        payment.status = 'completed'
+        payment.verification_date = datetime.utcnow()
+        payment.verified_by = current_user.id
+        
+        # Commit the changes
+        db.session.commit()
+        flash('Payment has been verified successfully', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error verifying payment: {str(e)}', 'error')
     
     return redirect(url_for('agent.pending_rentals'))
 
@@ -1162,13 +1177,75 @@ def verify_rental_payment(payment_id):
         db.session.commit()
         
         # Generate and send receipt
-        receipt_buffer = generate_payment_receipt(payment)
-        send_payment_receipt_email(payment, receipt_buffer)
+        try:
+            receipt_buffer = generate_payment_receipt(payment)
+            send_payment_receipt_email(payment, receipt_buffer)
+        except Exception as e:
+            # Log error but don't fail the payment update
+            print(f"Error sending payment receipt: {str(e)}")
         
         flash('Payment has been verified and receipt sent to tenant', 'success')
         
     except Exception as e:
         db.session.rollback()
         flash('Error verifying payment. Please try again.', 'error')
+    
+    return redirect(url_for('agent.pending_rentals'))
+
+@agent.route('/payment/<int:payment_id>/verify', methods=['POST'])
+@login_required
+@agent_required
+def verify_rental_payment(payment_id):
+    payment = Payment.query.get_or_404(payment_id)
+    
+    # Verify this payment is for a property managed by this agent
+    if payment.rental.property.agent_id != current_user.id:
+        abort(403)
+    
+    try:
+        # Update payment status
+        payment.status = 'completed'
+        payment.verification_date = datetime.utcnow()
+        payment.verified_by = current_user.id
+        
+        # If this is the initial payment for a pending rental, update rental status
+        rental = payment.rental
+        if rental.status == 'pending':
+            rental.status = 'active'
+            rental.property.status = 'rented'
+        
+        # Commit the database changes first
+        db.session.commit()
+        
+        # Try to send emails, but don't rollback if they fail
+        email_sent = True
+        try:
+            # Send confirmation email to tenant
+            msg = Message(
+                'Payment Verified',
+                recipients=[rental.tenant.email],
+                html=render_template(
+                    'emails/rental_approved.html',
+                    rental=rental,
+                    tenant=rental.tenant
+                )
+            )
+            mail.send(msg)
+            
+            # Generate and send receipt
+            receipt_buffer = generate_payment_receipt(payment)
+            send_payment_receipt_email(payment, receipt_buffer)
+        except Exception as email_error:
+            print(f"Warning: Failed to send email notifications: {str(email_error)}")
+            email_sent = False
+        
+        if email_sent:
+            flash('Payment has been verified and receipt sent to tenant', 'success')
+        else:
+            flash('Payment has been verified, but failed to send email notifications', 'warning')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error verifying payment: {str(e)}', 'error')
     
     return redirect(url_for('agent.pending_rentals'))

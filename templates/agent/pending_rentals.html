@@ -55,18 +55,22 @@
                             {% endif %}
                         {% elif rental.payments|selectattr('status', 'eq', 'completed')|first %}
                             <span class="badge bg-success">Payment Verified</span>
+                            {% set completed_payment = rental.payments|selectattr('status', 'eq', 'completed')|first %}
+                            {% if completed_payment and completed_payment.verification_date %}
                             <br>
-                            <small class="text-muted">{{ rental.payments|selectattr('status', 'eq', 'completed')|first.verification_date.strftime('%Y-%m-%d') }}</small>
+                            <small class="text-muted">{{ completed_payment.verification_date.strftime('%Y-%m-%d') }}</small>
+                            {% endif %}
                         {% else %}
                             <span class="badge bg-danger">No Payment Found</span>
                         {% endif %}
                     </td>
                     <td>
                         <div class="btn-group" role="group">
+                            {% set completed_payment = rental.payments|selectattr('status', 'eq', 'completed')|first %}
                             <form action="{{ url_for('agent.approve_rental', rental_id=rental.id) }}" method="POST" class="d-inline">
                                 <button type="submit" class="btn btn-success btn-sm me-2" 
-                                        {% if not payment or payment.status != 'completed' %}disabled{% endif %}
-                                        title="{% if not payment or payment.status != 'completed' %}Cannot approve without verified payment{% endif %}">
+                                        {% if not completed_payment %}disabled{% endif %}
+                                        title="{% if not completed_payment %}Cannot approve without verified payment{% endif %}">
                                     <i class="fas fa-check me-1"></i> Approve
                                 </button>
                             </form>

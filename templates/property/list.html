@@ -1,29 +1,40 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2 class="mb-4">Available Properties</h2>
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Properties</h1>
+            {% if current_user.is_authenticated and current_user.role in ['admin', 'agent'] %}
+            <a href="{{ url_for('property.add_property') }}" class="btn btn-primary">Add Property</a>
+            {% endif %}
+        </div>
+    </div>
 
-<div class="row row-cols-1 row-cols-md-3 g-4">
-    {% for property in properties %}
-    <div class="col">
-        <div class="card h-100">
-            <img src="{{ url_for('static', filename='img/property-placeholder.jpg') }}" class="card-img-top" alt="{{ property.title }}">
-            <div class="card-body">
-                <h5 class="card-title">{{ property.title }}</h5>
-                <p class="card-text">{{ property.description[:150] }}...</p>
-                <ul class="list-unstyled">
-                    <li>
-                        <div class="property-price mb-3">
-                            <h4 class="text-primary">KES {{ "{:,.2f}".format(property.price) }} /month</h4>
-                        </div>
-                    </li>
-                    <li><strong>Bedrooms:</strong> {{ property.bedrooms }}</li>
-                    <li><strong>Bathrooms:</strong> {{ property.bathrooms }}</li>
-                    <li><strong>Area:</strong> {{ property.area }} sq ft</li>
-                </ul>
-            </div>
-            <div class="card-footer">
-                <div class="d-grid gap-2">
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for property in properties %}
+        <div class="col">
+            <div class="card h-100">
+                {% if property.images %}
+                    {% set primary_image = property.images|selectattr('is_primary', 'eq', true)|first %}
+                    {% if primary_image %}
+                        <img src="{{ url_for('static', filename='uploads/' + primary_image.image_path) }}" class="card-img-top" alt="{{ property.title }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        {% set first_image = property.images|first %}
+                        <img src="{{ url_for('static', filename='uploads/' + first_image.image_path) }}" class="card-img-top" alt="{{ property.title }}" style="height: 200px; object-fit: cover;">
+                    {% endif %}
+                {% else %}
+                    <img src="{{ url_for('static', filename='img/property-placeholder.jpg') }}" class="card-img-top" alt="{{ property.title }}" style="height: 200px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ property.title }}</h5>
+                    <p class="card-text">{{ property.description[:150] }}{% if property.description|length > 150 %}...{% endif %}</p>
+                    <ul class="list-unstyled">
+                        <li><strong>Price:</strong> {{ property.price|currency }}</li>
+                        <li><strong>Bedrooms:</strong> {{ property.bedrooms }}</li>
+                        <li><strong>Bathrooms:</strong> {{ property.bathrooms }}</li>
+                        <li><strong>Status:</strong> {{ property.status.title() }}</li>
+                    </ul>
                     <a href="{{ url_for('property.view_property', id=property.id) }}" class="btn btn-primary">View Details</a>
                     {% if current_user.is_authenticated and current_user.role == 'client' %}
                     <a href="{{ url_for('client.rent_property', property_id=property.id) }}" class="btn btn-success">Rent Now</a>
@@ -31,11 +42,12 @@
                 </div>
             </div>
         </div>
+        {% endfor %}
+        {% if not properties %}
+        <div class="col-12">
+            <div class="alert alert-info">No properties available at the moment.</div>
+        </div>
+        {% endif %}
     </div>
-    {% else %}
-    <div class="col-12">
-        <div class="alert alert-info">No properties available at the moment.</div>
-    </div>
-    {% endfor %}
 </div>
 {% endblock %}

@@ -97,25 +97,38 @@ def rent_property(property_id):
                 rent_amount=property_item.price,
                 status='pending'
             )
-            db.session.add(rental)
             
-            # Create initial payment record
-            payment = Payment(
-                rental_id=rental.id,
-                amount=property_item.price * 2,  # First month + deposit
-                payment_date=datetime.now(),
-                payment_method=payment_method,
-                status='pending'
-            )
-            db.session.add(payment)
-            
-            # Update property status
-            property_item.status = 'pending'
-            
-            db.session.commit()
-            
-            # Redirect to payment
-            return redirect(url_for('client.make_payment', rental_id=rental.id))
+            try:
+                # First save the rental to get its ID
+                db.session.add(rental)
+                db.session.flush()  # This assigns the ID without committing
+                
+                # Create initial payment record
+                payment = Payment(
+                    rental_id=rental.id,
+                    amount=property_item.price * 2,  # First month + deposit
+                    payment_date=datetime.now(),
+                    payment_method=payment_method,
+                    status='pending',
+                    due_date=start_date + timedelta(days=30),
+                    total_amount=property_item.price * 2
+                )
+                db.session.add(payment)
+                
+                # Update property status
+                property_item.status = 'pending'
+                
+                # Now commit everything
+                db.session.commit()
+                
+                # Redirect to payment
+                return redirect(url_for('client.make_payment', rental_id=rental.id))
+                
+            except Exception as e:
+                db.session.rollback()
+                print(f"Error creating rental: {str(e)}")
+                flash('An error occurred while processing your request. Please try again.')
+                return redirect(url_for('client.rent_property', property_id=property_id))
             
         except ValueError:
             flash('Invalid date format')
@@ -171,117 +184,107 @@ def make_payment(rental_id):
         
         return render_template('client/payment_select.html', rentals=rentals_with_payments)
     
-    rental = Rental.query.get_or_404(rental_id)
-    
-    # Verify ownership
-    if rental.tenant_id != current_user.id:
-        flash('Unauthorized access')
-        return redirect(url_for('main.index'))
-    
-    # Get pending payment
-    payment = Payment.query.filter_by(
-        rental_id=rental.id,
-        status='pending'
-    ).first()
-    
-    if not payment:
-        # Calculate next payment date
-        last_payment = Payment.query.filter_by(
-            rental_id=rental.id
-        ).order_by(Payment.payment_date.desc()).first()
+    try:
+        rental = Rental.query.get_or_404(rental_id)
         
-        if last_payment:
-            due_date = last_payment.payment_date + timedelta(days=30)
-        else:
-            due_date = datetime.combine(rental.start_date, datetime.min.time()) + timedelta(days=30)
+        # Verify ownership
+        if rental.tenant_id != current_user.id:
+            flash('Unauthorized access')
+            return redirect(url_for('main.index'))
         
-        # Create new payment record
-        payment = Payment(
+        # Get pending payment
+        payment = Payment.query.filter_by(
             rental_id=rental.id,
-            amount=rental.rent_amount,
-            status='pending',
-            payment_date=datetime.now(),
-            due_date=due_date,
-            total_amount=rental.rent_amount  # Will be updated if there's a late fee
-        )
-
-        # Generate appropriate reference based on payment method
-        payment_method = request.form.get('payment_method')
-        if payment_method == 'mpesa':
-            payment.reference = generate_mpesa_reference()
-            payment.phone_number = request.form.get('phone_number')
-        else:  # bank_transfer or card
-            payment.reference = generate_transaction_reference('PAY')
+            status='pending'
+        ).first()
         
-        db.session.add(payment)
-        db.session.commit()
-        
-        # Calculate late fee if applicable
-        current_time = datetime.now()
-        if payment.due_date < current_time:
-            days_overdue = (current_time - payment.due_date).days
-            late_fee = payment.amount * 0.1  # 10% late fee
-            payment.late_fee = late_fee
-            payment.days_overdue = days_overdue
-            payment.total_amount = payment.amount + late_fee
-            db.session.commit()
-    
-    # Calculate late fee if applicable
-    current_time = datetime.now()
-    if payment.due_date < current_time:
-        days_overdue = (current_time - payment.due_date).days
-        payment.late_fee = payment.amount * 0.1  # 10% late fee
-        payment.days_overdue = days_overdue
-        payment.total_amount = payment.amount + payment.late_fee
-    else:
-        payment.late_fee = 0
-        payment.days_overdue = 0
-        payment.total_amount = payment.amount
-    
-    if request.method == 'POST':
-        payment_method = request.form.get('payment_method')
-        
-        if payment_method == 'mpesa':
-            # Handle M-PESA payment
-            phone_number = request.form.get('phone_number')
-            if not phone_number:
-                flash('Please provide your M-PESA phone number')
+        if not payment and request.method == 'POST':
+            # Calculate next payment date
+            last_payment = Payment.query.filter_by(
+                rental_id=rental.id
+            ).order_by(Payment.payment_date.desc()).first()
+            
+            if last_payment:
+                due_date = last_payment.payment_date + timedelta(days=30)
+            else:
+                due_date = datetime.combine(rental.start_date, datetime.min.time()) + timedelta(days=30)
+            
+            payment_method = request.form.get('payment_method')
+            if not payment_method:
+                flash('Please select a payment method')
                 return redirect(url_for('client.make_payment', rental_id=rental_id))
+            
+            # Create new payment record
+            payment = Payment(
+                rental_id=rental.id,
+                amount=rental.rent_amount,
+                status='pending',
+                payment_date=datetime.now(),
+                due_date=due_date,
+                payment_method=payment_method,
+                total_amount=rental.rent_amount  # Will be updated if there's a late fee
+            )
+            
+            # Generate appropriate reference based on payment method
+            if payment_method == 'mpesa':
+                phone_number = request.form.get('phone_number')
+                if not phone_number:
+                    flash('Please provide your M-PESA phone number')
+                    return redirect(url_for('client.make_payment', rental_id=rental_id))
+                payment.reference = generate_mpesa_reference()
+                payment.phone_number = phone_number
+            else:  # bank_transfer or card
+                payment.reference = generate_transaction_reference('PAY')
+            
+            db.session.add(payment)
+            db.session.flush()
+        
+        if payment:
+            # Calculate late fee if applicable
+            current_time = datetime.now()
+            if payment.due_date and payment.due_date < current_time:
+                days_overdue = (current_time - payment.due_date).days
+                payment.late_fee = payment.amount * 0.1  # 10% late fee
+                payment.days_overdue = days_overdue
+                payment.total_amount = payment.amount + payment.late_fee
+            else:
+                payment.late_fee = 0
+                payment.days_overdue = 0
+                payment.total_amount = payment.amount
+            
+            if request.method == 'POST':
+                payment_method = request.form.get('payment_method')
                 
-            # TODO: Integrate with M-PESA API
-            payment.status = 'pending_mpesa'
-            payment.payment_method = 'mpesa'
-            payment.phone_number = phone_number
-            db.session.commit()
-            flash('M-PESA payment request sent. Please check your phone for the STK push.')
-            return redirect(url_for('client.my_rentals'))
-            
-        elif payment_method == 'bank':
-            # Handle bank transfer
-            reference = request.form.get('reference')
-            if not reference:
-                flash('Please provide the transaction reference')
-                return redirect(url_for('client.make_payment', rental_id=rental_id))
-            
-            payment.reference = reference
-            payment.status = 'pending_verification'
-            payment.payment_method = 'bank'
-            db.session.commit()
-            flash('Payment pending verification')
-            return redirect(url_for('client.my_rentals'))
-            
-        elif payment_method == 'card':
-            # Handle card payment
-            # TODO: Integrate with card payment gateway
-            payment.status = 'pending_card'
-            payment.payment_method = 'card'
-            db.session.commit()
-            flash('Card payment integration coming soon')
-            return redirect(url_for('client.my_rentals'))
-    
-    return render_template('client/make_payment.html', 
-                         rental=rental,
-                         payment=payment)
+                if payment_method == 'mpesa':
+                    # Handle M-PESA payment
+                    phone_number = request.form.get('phone_number')
+                    if not phone_number:
+                        flash('Please provide your M-PESA phone number')
+                        return redirect(url_for('client.make_payment', rental_id=rental_id))
+                    
+                    payment.phone_number = phone_number
+                    payment.status = 'pending_verification'
+                    flash('M-PESA payment initiated. Please check your phone for the payment prompt.')
+                
+                elif payment_method == 'bank_transfer':
+                    payment.status = 'pending_verification'
+                    flash('Please complete the bank transfer using the provided reference number.')
+                
+                elif payment_method == 'card':
+                    # TODO: Implement card payment integration
+                    payment.status = 'pending_verification'
+                    flash('Card payment functionality coming soon.')
+                
+                db.session.commit()
+                return redirect(url_for('client.view_payments', rental_id=rental_id))
+        
+        return render_template('client/make_payment.html', rental=rental, payment=payment)
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error processing payment: {str(e)}")
+        flash('An error occurred while processing your request. Please try again.')
+        return redirect(url_for('main.index'))
 
 @client.route('/payments/<int:rental_id>')
 @login_required
